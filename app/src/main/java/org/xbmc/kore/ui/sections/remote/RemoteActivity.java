@@ -90,6 +90,11 @@ public class RemoteActivity
        // Set default values for the preferences
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
+        // Profile application start-up performance
+        //CWE-489
+        //SINK
+        android.os.Debug.startMethodTracing();
+
         hostManager = HostManager.getInstance(this);
 
         // Check if we have any hosts setup

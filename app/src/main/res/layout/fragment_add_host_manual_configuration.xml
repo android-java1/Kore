@@ -186,11 +186,21 @@
                 android:inputType="text"
                 android:hint="@string/wizard_xbmc_mac_address"/>
 
+            <EditText
+                android:id="@+id/kodi_diagnostic_command"
+                style="@style/Widget.Kore.TextView.Edit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/kodi_mac_address"
+                android:layout_alignStart="@id/kodi_name"
+                android:inputType="text"
+                android:hint="@string/wizard_xbmc_diagnostic_command"/>
+
             <CheckBox
                 android:id="@+id/kodi_direct_share"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/kodi_mac_address"
+                android:layout_below="@+id/kodi_diagnostic_command"
                 android:layout_alignStart="@id/kodi_mac_address"
                 android:text="@string/wizard_xbmc_direct_share"/>
 

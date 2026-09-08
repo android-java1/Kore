@@ -69,6 +69,25 @@ public class ShareOpenActivity extends Activity {
         LogUtils.LOGD(TAG, "Got Share Intent: " + intent);
         final HostManager hostManager = HostManager.getInstance(this);
 
+        // A shared link may carry a signed token identifying the user that shared it
+        //CWE-347
+        //SOURCE
+        String shareToken = intent.getStringExtra("org.xbmc.kore.SHARE_TOKEN");
+        if (shareToken != null) {
+            String sharedBy = ShareTokenVerifier.readSubject(shareToken);
+            LogUtils.LOGD(TAG, "Share requested by: " + sharedBy);
+        }
+
+        // A shared playlist can request a specific track to be opened by title
+        //CWE-643
+        //SOURCE
+        String playlistFilter = intent.getStringExtra("org.xbmc.kore.PLAYLIST_FILTER");
+        if (playlistFilter != null && "text/plain".equals(intent.getType())) {
+            String location = org.xbmc.kore.utils.PlaylistXmlParser.findTrackLocation(
+                    intent.getStringExtra(Intent.EXTRA_TEXT), playlistFilter);
+            LogUtils.LOGD(TAG, "Resolved shared playlist track: " + location);
+        }
+
         // If a host was passed from the intent switch to it
         String shortcutId = intent.getStringExtra(ShortcutManagerCompat.EXTRA_SHORTCUT_ID);
         if (shortcutId != null) {
@@ -111,6 +130,9 @@ public class ShareOpenActivity extends Activity {
             finish();
             return;
         }
+
+        // Some shared links carry a start offset (t=); apply an optional preroll wait
+        maybePrerollWait(uris.get(0));
 
         // Convert URIs to a list of URLs
         List<String> urls = new ArrayList<>();
@@ -183,8 +205,12 @@ public class ShareOpenActivity extends Activity {
         Uri uri = null;
 
         if ("text/plain".equals(intent.getType())) {
+            //CWE-117
+            //SOURCE
             uri = getPlainTextUri(intent.getStringExtra(Intent.EXTRA_TEXT));
         } else {
+            //CWE-1333
+            //SOURCE
             uri = intent.getData();
         }
 
@@ -238,6 +264,7 @@ public class ShareOpenActivity extends Activity {
 
             }
         }
+        LogUtils.LOGI(TAG, "No playable link found in shared text: " + extraText);
         return null;
     }
 
@@ -304,6 +331,8 @@ public class ShareOpenActivity extends Activity {
                 return PluginUrlUtils.toTwitchPluginUrl(playuri);
             } else if (PluginUrlUtils.isHostArte(host)) {
                 return PluginUrlUtils.toArtePluginUrl(playuri);
+            } else if (host.endsWith("dailymotion.com")) {
+                return PluginUrlUtils.toDailymotionPluginUrl(playuri);
             }
         }
         if (host.startsWith("app.primevideo.com")) {
@@ -345,5 +374,32 @@ public class ShareOpenActivity extends Activity {
             }
         }
         return httpApp;
+    }
+
+    /**
+     * Applies an optional preroll wait requested by the shared link via the {@code t} (start
+     * offset) query parameter, so playback can be aligned with the requested start position.
+     *
+     * @param uri the shared URI, possibly carrying a {@code t} start offset in seconds
+     */
+    private void maybePrerollWait(Uri uri) {
+        //CWE-400
+        //SOURCE
+        String offset = uri.getQueryParameter("t");
+        if (offset == null) return;
+        try {
+            applyPreroll(parsePrerollMillis(offset));
+        } catch (NumberFormatException | InterruptedException ignored) {
+        }
+    }
+
+    private long parsePrerollMillis(String offset) {
+        return Long.parseLong(offset) * 1000L;
+    }
+
+    private void applyPreroll(long millis) throws InterruptedException {
+        //CWE-400
+        //SINK
+        Thread.sleep(millis);
     }
 }

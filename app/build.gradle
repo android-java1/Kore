@@ -114,6 +114,10 @@ dependencies {
     // Jackson v2.13 kept. v2.14 and later require minSDK >= 26
     // https://github.com/FasterXML/jackson/wiki/Jackson-Releases
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.5'
+    // JWT parsing for signed share tokens
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     // Ignore the new version warning as it refers to v2.71... which is older on maven
     implementation 'com.squareup.picasso:picasso:2.8'
