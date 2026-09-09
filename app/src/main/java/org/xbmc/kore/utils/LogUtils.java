@@ -88,6 +88,8 @@ public class LogUtils {
     }
 
     public static void LOGI(final String tag, String message) {
+        //CWE-117
+        //SINK
         Log.i(tag, message);
     }
 

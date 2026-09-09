@@ -148,7 +148,7 @@ public class HostManager {
                     int httpPort = cursor.getInt(idx++);
                     int tcpPort = cursor.getInt(idx++);
                     String username = cursor.getString(idx++);
-                    String password = cursor.getString(idx++);
+                    String password = HostCredentialCipher.decrypt(cursor.getString(idx++));
                     String macAddress = cursor.getString(idx++);
                     int wolPort = cursor.getInt(idx++);
                     boolean directShare = (cursor.getInt(idx++) != 0);
@@ -358,7 +358,7 @@ public class HostManager {
 		values.put(MediaContract.HostsColumns.HTTP_PORT, httpPort);
 		values.put(MediaContract.HostsColumns.TCP_PORT, tcpPort);
 		values.put(MediaContract.HostsColumns.USERNAME, username);
-		values.put(MediaContract.HostsColumns.PASSWORD, password);
+		values.put(MediaContract.HostsColumns.PASSWORD, HostCredentialCipher.encrypt(password));
         values.put(MediaContract.HostsColumns.MAC_ADDRESS, macAddress);
         values.put(MediaContract.HostsColumns.WOL_PORT, wolPort);
         values.put(MediaContract.HostsColumns.DIRECT_SHARE, directShare);
@@ -400,7 +400,7 @@ public class HostManager {
         values.put(MediaContract.HostsColumns.HTTP_PORT, newHostInfo.getHttpPort());
         values.put(MediaContract.HostsColumns.TCP_PORT, newHostInfo.getTcpPort());
         values.put(MediaContract.HostsColumns.USERNAME, newHostInfo.getUsername());
-        values.put(MediaContract.HostsColumns.PASSWORD, newHostInfo.getPassword());
+        values.put(MediaContract.HostsColumns.PASSWORD, HostCredentialCipher.encrypt(newHostInfo.getPassword()));
         values.put(MediaContract.HostsColumns.MAC_ADDRESS, newHostInfo.getMacAddress());
         values.put(MediaContract.HostsColumns.WOL_PORT, newHostInfo.getWolPort());
         values.put(MediaContract.HostsColumns.DIRECT_SHARE, newHostInfo.getShowAsDirectShareTarget());

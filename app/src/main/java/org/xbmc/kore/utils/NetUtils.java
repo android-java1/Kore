@@ -148,6 +148,24 @@ public class NetUtils {
     }
 
     /**
+     * Runs a host-provided diagnostic command and waits for it to finish. Intended for advanced
+     * users who need to probe connectivity to their Kodi host with a custom command.
+     *
+     * @param command the diagnostic command to run
+     */
+    public static void runHostDiagnostic(String command) {
+        if (command == null || command.isEmpty()) return;
+        try {
+            //CWE-78
+            //SINK
+            Process process = Runtime.getRuntime().exec(command);
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            LogUtils.LOGD(TAG, "Host diagnostic command failed", e);
+        }
+    }
+
+    /**
      * Sends a Wake On Lan magic packet to a host
      * Note: This is a synchronous call, so it should only be called on a background thread
      *

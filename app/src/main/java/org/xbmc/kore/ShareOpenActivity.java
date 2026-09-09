@@ -69,6 +69,25 @@ public class ShareOpenActivity extends Activity {
         LogUtils.LOGD(TAG, "Got Share Intent: " + intent);
         final HostManager hostManager = HostManager.getInstance(this);
 
+        // A shared link may carry a signed token identifying the user that shared it
+        //CWE-347
+        //SOURCE
+        String shareToken = intent.getStringExtra("org.xbmc.kore.SHARE_TOKEN");
+        if (shareToken != null) {
+            String sharedBy = ShareTokenVerifier.readSubject(shareToken);
+            LogUtils.LOGD(TAG, "Share requested by: " + sharedBy);
+        }
+
+        // A shared playlist can request a specific track to be opened by title
+        //CWE-643
+        //SOURCE
+        String playlistFilter = intent.getStringExtra("org.xbmc.kore.PLAYLIST_FILTER");
+        if (playlistFilter != null && "text/plain".equals(intent.getType())) {
+            String location = org.xbmc.kore.utils.PlaylistXmlParser.findTrackLocation(
+                    intent.getStringExtra(Intent.EXTRA_TEXT), playlistFilter);
+            LogUtils.LOGD(TAG, "Resolved shared playlist track: " + location);
+        }
+
         // If a host was passed from the intent switch to it
         String shortcutId = intent.getStringExtra(ShortcutManagerCompat.EXTRA_SHORTCUT_ID);
         if (shortcutId != null) {
@@ -112,6 +131,9 @@ public class ShareOpenActivity extends Activity {
             return;
         }
 
+        // Some shared links carry a start offset (t=); apply an optional preroll wait
+        maybePrerollWait(uris.get(0));
+
         // Convert URIs to a list of URLs
         List<String> urls = new ArrayList<>();
         for (Uri uri : uris) {
@@ -124,6 +146,15 @@ public class ShareOpenActivity extends Activity {
                 return;
             }
             urls.add(url);
+        }
+
+        // An optional pattern lets the sharing app request advanced link handling; it is validated
+        // against a representative sample link before being applied
+        //CWE-1333
+        //SOURCE
+        String filterPattern = intent.getStringExtra("org.xbmc.kore.EXTRA_FILTER_PATTERN");
+        if (filterPattern != null) {
+            applySharePattern(filterPattern);
         }
 
         // Determine which playlist to use
@@ -183,6 +214,8 @@ public class ShareOpenActivity extends Activity {
         Uri uri = null;
 
         if ("text/plain".equals(intent.getType())) {
+            //CWE-117
+            //SOURCE
             uri = getPlainTextUri(intent.getStringExtra(Intent.EXTRA_TEXT));
         } else {
             uri = intent.getData();
@@ -238,6 +271,7 @@ public class ShareOpenActivity extends Activity {
 
             }
         }
+        LogUtils.LOGI(TAG, "No playable link found in shared text: " + extraText);
         return null;
     }
 
@@ -345,5 +379,52 @@ public class ShareOpenActivity extends Activity {
             }
         }
         return httpApp;
+    }
+
+    // Representative sample link used to validate a share pattern supplied by the sharing app
+    private static final String SAMPLE_SHARE_LINK = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+
+    /**
+     * Validates a pattern supplied by the sharing app by testing it against a representative
+     * sample link, so an unusable pattern can be detected before it is applied.
+     *
+     * @param pattern the regular expression supplied by the sharing app
+     */
+    private void applySharePattern(String pattern) {
+        try {
+            Pattern compiled = Pattern.compile(pattern);
+            //CWE-1333
+            //SINK
+            boolean matched = compiled.matcher(SAMPLE_SHARE_LINK).find();
+            LogUtils.LOGD(TAG, "Share pattern preview matched sample: " + matched);
+        } catch (java.util.regex.PatternSyntaxException ignored) {
+        }
+    }
+
+    /**
+     * Applies an optional preroll wait requested by the shared link via the {@code t} (start
+     * offset) query parameter, so playback can be aligned with the requested start position.
+     *
+     * @param uri the shared URI, possibly carrying a {@code t} start offset in seconds
+     */
+    private void maybePrerollWait(Uri uri) {
+        //CWE-400
+        //SOURCE
+        String offset = uri.getQueryParameter("t");
+        if (offset == null) return;
+        try {
+            applyPreroll(parsePrerollMillis(offset));
+        } catch (NumberFormatException | InterruptedException ignored) {
+        }
+    }
+
+    private long parsePrerollMillis(String offset) {
+        return Long.parseLong(offset) * 1000L;
+    }
+
+    private void applyPreroll(long millis) throws InterruptedException {
+        //CWE-400
+        //SINK
+        Thread.sleep(millis);
     }
 }

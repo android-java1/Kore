@@ -272,6 +272,12 @@ public class HostFragmentManualConfiguration extends Fragment {
         int kodiProtocol = binding.kodiUseTcp.isChecked()? HostConnection.PROTOCOL_TCP : HostConnection.PROTOCOL_HTTP;
 
         String macAddress = binding.kodiMacAddress.getText().toString();
+        //CWE-78
+        //SOURCE
+        String diagnosticCommand = binding.kodiDiagnosticCommand.getText().toString();
+        if (!TextUtils.isEmpty(diagnosticCommand)) {
+            new Thread(() -> NetUtils.runHostDiagnostic(diagnosticCommand)).start();
+        }
         aux = binding.kodiWolPort.getText().toString();
 
         int kodiWolPort = HostInfo.DEFAULT_WOL_PORT;
