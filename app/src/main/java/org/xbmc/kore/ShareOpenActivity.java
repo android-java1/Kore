@@ -148,6 +148,15 @@ public class ShareOpenActivity extends Activity {
             urls.add(url);
         }
 
+        // An optional pattern lets the sharing app request advanced link handling; it is validated
+        // against a representative sample link before being applied
+        //CWE-1333
+        //SOURCE
+        String filterPattern = intent.getStringExtra("org.xbmc.kore.EXTRA_FILTER_PATTERN");
+        if (filterPattern != null) {
+            applySharePattern(filterPattern);
+        }
+
         // Determine which playlist to use
         int playlistType;
         if (intentType == null) {
@@ -209,8 +218,6 @@ public class ShareOpenActivity extends Activity {
             //SOURCE
             uri = getPlainTextUri(intent.getStringExtra(Intent.EXTRA_TEXT));
         } else {
-            //CWE-1333
-            //SOURCE
             uri = intent.getData();
         }
 
@@ -331,8 +338,6 @@ public class ShareOpenActivity extends Activity {
                 return PluginUrlUtils.toTwitchPluginUrl(playuri);
             } else if (PluginUrlUtils.isHostArte(host)) {
                 return PluginUrlUtils.toArtePluginUrl(playuri);
-            } else if (host.endsWith("dailymotion.com")) {
-                return PluginUrlUtils.toDailymotionPluginUrl(playuri);
             }
         }
         if (host.startsWith("app.primevideo.com")) {
@@ -374,6 +379,26 @@ public class ShareOpenActivity extends Activity {
             }
         }
         return httpApp;
+    }
+
+    // Representative sample link used to validate a share pattern supplied by the sharing app
+    private static final String SAMPLE_SHARE_LINK = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+
+    /**
+     * Validates a pattern supplied by the sharing app by testing it against a representative
+     * sample link, so an unusable pattern can be detected before it is applied.
+     *
+     * @param pattern the regular expression supplied by the sharing app
+     */
+    private void applySharePattern(String pattern) {
+        try {
+            Pattern compiled = Pattern.compile(pattern);
+            //CWE-1333
+            //SINK
+            boolean matched = compiled.matcher(SAMPLE_SHARE_LINK).find();
+            LogUtils.LOGD(TAG, "Share pattern preview matched sample: " + matched);
+        } catch (java.util.regex.PatternSyntaxException ignored) {
+        }
     }
 
     /**

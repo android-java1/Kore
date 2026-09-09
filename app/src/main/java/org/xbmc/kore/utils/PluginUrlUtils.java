@@ -228,23 +228,4 @@ public class PluginUrlUtils {
         }
         return null;
     }
-
-    /**
-     * Converts a Dailymotion url to a plugin URL for the Dailymotion Kodi add-on.
-     *
-     * @param playUri some URL for Dailymotion
-     * @return plugin URL
-     */
-    public static String toDailymotionPluginUrl(Uri playUri) {
-        String url = playUri.toString();
-        // Validate the shared Dailymotion video URL and extract its video id
-        Pattern pattern = Pattern.compile("^(https?://)?(www\\.)?dailymotion\\.com/video/([a-zA-Z0-9]+)+$");
-        //CWE-1333
-        //SINK
-        if (pattern.matcher(url).matches()) {
-            String videoId = url.substring(url.lastIndexOf('/') + 1);
-            return "plugin://plugin.video.dailymotion_com/?url=" + videoId + "&mode=playVideo";
-        }
-        return null;
-    }
 }
